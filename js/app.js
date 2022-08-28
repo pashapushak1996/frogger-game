@@ -38,7 +38,8 @@ Enemy.prototype.checkCollision = function () {
             this.y - gameConfig.PADDING_TOP < this.player.y &&
             this.y + gameConfig.PADDING_TOP > this.player.y
         ) {
-            alert('You lose');
+            alert(`You lose! Score: ${ player.score }`);
+
             this.resetEnemyPosition();
             this.player.resetPosition();
         }
@@ -68,7 +69,7 @@ Enemy.prototype.render = function () {
 const Player = function (x, y) {
     this.x = x;
     this.y = y;
-
+    this.score = 0;
     this.sprite = 'images/char-boy.png';
 };
 
@@ -81,8 +82,10 @@ Player.prototype.handleInput = function (key) {
                 this.y -= canvasConfig.CELL_HEIGHT;
             }
             if (this.y < 0) {
+                this.score++;
+
                 setTimeout(() => {
-                    alert('You win');
+                    alert(`You win! Score: ${ this.score }`);
                     this.resetPosition();
                 }, 100);
             }
