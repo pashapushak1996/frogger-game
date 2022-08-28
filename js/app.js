@@ -19,38 +19,52 @@ const canvasConfig = {
 const gameConfig = {
     PADDING_TOP: 20,
     PADDING_LEFT: 78,
+    MIN_SPEED: 100,
+    MAX_SPEED: 300
 }
 
-// Enemies our player must avoid
-const Enemy = function (x, y) {
+const Enemy = function (x, y, speed, player) {
     this.x = x;
     this.y = y;
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
+    this.speed = speed;
+    this.player = player;
     this.sprite = 'images/enemy-bug.png';
 };
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-Enemy.prototype.update = function (dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+Enemy.prototype.checkCollision = function () {
+    if (this.player) {
+        if (this.x + gameConfig.PADDING_LEFT > this.player.x &&
+            this.x - gameConfig.PADDING_LEFT < this.player.x &&
+            this.y - gameConfig.PADDING_TOP < this.player.y &&
+            this.y + gameConfig.PADDING_TOP > this.player.y
+        ) {
+            alert('You lose');
+            this.resetEnemyPosition();
+            this.player.resetPosition();
+        }
+    }
 };
 
-// Draw the enemy on the screen, required method for game
+Enemy.prototype.resetEnemyPosition = function () {
+    this.x = -canvasConfig.CELL_WIDTH;
+};
+
+Enemy.prototype.update = function (dt) {
+    if (dt) {
+        this.x += dt * this.speed;
+    }
+
+    if (this.x >= canvasConfig.WIDTH) {
+        this.resetEnemyPosition();
+    }
+
+    this.checkCollision();
+};
+
 Enemy.prototype.render = function () {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-const addEnemies = () => Object.values(enemiesConfig).map(pos => new Enemy(-canvasConfig.CELL_WIDTH, pos));
-
-const allEnemies = addEnemies();
-
-// Now write your own player class
 const Player = function (x, y) {
     this.x = x;
     this.y = y;
@@ -65,6 +79,12 @@ Player.prototype.handleInput = function (key) {
         case 'ArrowUp':
             if (this.y > 0) {
                 this.y -= canvasConfig.CELL_HEIGHT;
+            }
+            if (this.y < 0) {
+                setTimeout(() => {
+                    alert('You win');
+                    this.resetPosition();
+                }, 100);
             }
             break;
         case 'ArrowDown':
@@ -86,21 +106,23 @@ Player.prototype.handleInput = function (key) {
             break;
 
     }
+};
+
+Player.prototype.resetPosition = function () {
+    this.x = playerConfig.POS_X;
+    this.y = playerConfig.POS_Y;
 }
 
 const player = new Player(playerConfig.POS_X, playerConfig.POS_Y);
 
-// This class requires an update(), render() and
-// a handleInput() method.
+const addEnemies = () => Object.values(enemiesConfig).map(pos => {
+    const randomSpeed = Math.random() * (gameConfig.MAX_SPEED - gameConfig.MIN_SPEED) + gameConfig.MIN_SPEED;
 
+    return new Enemy(-canvasConfig.CELL_WIDTH, pos, randomSpeed, player);
+});
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
+const allEnemies = addEnemies();
 
-
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
 document.addEventListener('keyup', function ({ key }) {
     player.handleInput(key);
 });
